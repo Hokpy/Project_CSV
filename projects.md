@@ -9,46 +9,46 @@
 ## Список задач
 
 ### 1. Создание структуры проекта
-- [ ] Создать ASP.NET Core MVC проект `ECommerceCsvImport`
-- [ ] Создать xUnit тестовый проект `ECommerceCsvImport.Tests`
-- [ ] Настроить Git репозиторий
-- [ ] Создать структуру папок (Models, Services, Controllers, Views)
+- [x] Создать ASP.NET Core MVC проект `ECommerceCsvImport`
+- [x] Создать xUnit тестовый проект `ECommerceCsvImport.Tests`
+- [x] Настроить Git репозиторий
+- [x] Создать структуру папок (Models, Services, Controllers, Views)
 
 ### 2. Реализация моделей данных
-- [ ] Создать модель `Product` с полями для электроники:
+- [x] Создать модель `Product` с полями для электроники:
   - sku, name, description, price, currency, category_name
   - stock, image_url, is_active
   - brand, warranty_months, model_number (специфичные для электроники)
-- [ ] Создать `ImportResult` для результатов импорта
-- [ ] Создать `ImportError` для описания ошибок
-- [ ] Создать view-модели: `ImportViewModel`, `ProductsIndexViewModel`
+- [x] Создать `ImportResult` для результатов импорта
+- [x] Создать `ImportError` для описания ошибок
+- [x] Создать view-модели: `ImportViewModel`, `ProductsIndexViewModel`
 
 ### 3. Реализация репозитория в памяти
-- [ ] Создать интерфейс `IProductRepository`
-- [ ] Реализовать `InMemoryProductRepository` с методами:
+- [x] Создать интерфейс `IProductRepository`
+- [x] Реализовать `InMemoryProductRepository` с методами:
   - Add(Product product)
   - GetAll()
   - GetBySku(string sku)
   - Count
   - Clear()
-- [ ] Обеспечить thread-safety (singleton в ASP.NET Core)
-- [ ] Написать unit-тесты для репозитория
+- [x] Обеспечить thread-safety (singleton в ASP.NET Core)
+- [x] Написать unit-тесты для репозитория
 
 ### 4. Реализация парсера CSV
-- [ ] Создать `CsvLineParser` с поддержкой:
+- [x] Создать `CsvLineParser` с поддержкой:
   - Разделения полей по запятым
   - Пустых полей
   - Кавычек (запятые внутри кавычек)
   - Экранирования двойных кавычек
   - Trim значений
-- [ ] Написать unit-тесты для парсера
+- [x] Написать unit-тесты для парсера
 
 ### 5. Реализация сервиса импорта
-- [ ] Создать интерфейс `IProductImportService`
-- [ ] Реализовать `ProductImportService` с методами:
+- [x] Создать интерфейс `IProductImportService`
+- [x] Реализовать `ProductImportService` с методами:
   - ImportFromCsv(string filePath)
   - ImportFromLines(IEnumerable<string> lines)
-- [ ] Реализовать валидацию полей:
+- [x] Реализовать валидацию полей:
   - sku: обязательное, не пустое
   - name: обязательное, не пустое
   - price: число > 0
@@ -58,22 +58,22 @@
   - warranty_months: целое 0-60
   - currency: по умолчанию "RUB"
   - category_name: по умолчанию "Без категории"
-- [ ] Обработать дубликаты SKU
-- [ ] Обработать ошибки чтения файла
-- [ ] Написать 23+ unit-тестов для сервиса импорта
+- [x] Обработать дубликаты SKU
+- [x] Обработать ошибки чтения файла
+- [x] Написать 23+ unit-тестов для сервиса импорта
 
 ### 6. Реализация контроллера и представлений
-- [ ] Создать `ProductsController` с действиями:
+- [x] Создать `ProductsController` с действиями:
   - Index() - список товаров
   - Import() GET - форма импорта
   - Import(string filePath) POST - запуск импорта
-- [ ] Реализовать `ResolveFilePath` для поддержки относительных и абсолютных путей
-- [ ] Создать `Views/Products/Index.cshtml` - таблица товаров
-- [ ] Создать `Views/Products/Import.cshtml` - форма импорта и результаты
+- [x] Реализовать `ResolveFilePath` для поддержки относительных и абсолютных путей
+- [x] Создать `Views/Products/Index.cshtml` - таблица товаров
+- [x] Создать `Views/Products/Import.cshtml` - форма импорта и результаты
 
 ### 7. Подготовка тестовых данных
-- [ ] Создать `wwwroot/csv/sample_products.csv` (11 товаров)
-- [ ] Создать тестовые CSV файлы:
+- [x] Создать `wwwroot/csv/sample_products.csv` (11 товаров)
+- [x] Создать тестовые CSV файлы:
   - valid_electronics.csv
   - invalid_price.csv
   - duplicate_sku.csv
@@ -83,12 +83,12 @@
   - empty_file.csv
 
 ### 8. Настройка Dependency Injection
-- [ ] Зарегистрировать сервисы как singleton в Program.cs:
+- [x] Зарегистрировать сервисы как singleton в Program.cs:
   - IProductRepository → InMemoryProductRepository
   - IProductImportService → ProductImportService
 
 ### 9. Тестирование
-- [ ] Выполнить все unit-тесты (репозиторий, парсер, сервис)
+- [x] Выполнить все unit-тесты (репозиторий, парсер, сервис)
 - [ ] Провести ручное тестирование UI:
   - Успешный импорт
   - Неверная цена
@@ -97,7 +97,7 @@
   - Неверное значение is_active
 
 ### 10. Оформление отчета
-- [ ] Подготовить отчет по практике с разделами:
+- [x] Подготовить отчет по практике с разделами:
   - Титульный лист
   - Цель и задачи
   - Описание задания
