@@ -74,15 +74,28 @@ public class ProductsController : Controller
             return null;
 
         var trimmed = input.Trim();
+
+        // Handle web-style paths like /csv/file.csv or csv/file.csv
+        // that refer to files inside wwwroot/csv/
+        var normalized = trimmed.Replace('\\', '/');
+
+        if (normalized.StartsWith("/csv/", StringComparison.OrdinalIgnoreCase))
+        {
+            var fileName = normalized["/csv/".Length..];
+            return Path.Combine(_environment.WebRootPath, "csv", fileName);
+        }
+
+        if (normalized.StartsWith("csv/", StringComparison.OrdinalIgnoreCase))
+        {
+            var fileName = normalized["csv/".Length..];
+            return Path.Combine(_environment.WebRootPath, "csv", fileName);
+        }
+
+        // Absolute OS path (e.g. C:\files\data.csv or /home/user/data.csv)
         if (Path.IsPathRooted(trimmed))
             return trimmed;
 
-        if (trimmed.StartsWith("/"))
-            trimmed = trimmed.TrimStart('/');
-
-        if (trimmed.StartsWith("csv/", StringComparison.OrdinalIgnoreCase))
-            trimmed = trimmed["csv/".Length..];
-
+        // Relative path — resolve against wwwroot/csv/
         return Path.Combine(_environment.WebRootPath, "csv", trimmed);
     }
 }
