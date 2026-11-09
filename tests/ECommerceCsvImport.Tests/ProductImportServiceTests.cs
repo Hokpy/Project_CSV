@@ -336,6 +336,24 @@ public class ProductImportServiceTests
         Assert.Equal("Ноутбук Lenovo IdeaPad 3", product.Name);
     }
 
+    [Fact]
+    public void ImportFromLines_DuplicateRows_ReportTheirActualLineNumbers()
+    {
+        var (_, service) = CreateService();
+        var lines = new[]
+        {
+            Header,
+            "1001,First product,,100,RUB,Test,1,,true,Brand,12,Model",
+            "",
+            "1001,Second product,,100,RUB,Test,1,,true,Brand,12,Model"
+        };
+
+        var result = service.ImportFromLines(lines);
+
+        var duplicate = Assert.Single(result.Errors);
+        Assert.Equal(4, duplicate.RowNumber);
+    }
+
     // === Тест 18: Дубликат SKU с уже существующим товаром в репозитории ===
     [Fact]
     public void ImportFromLines_SkuAlreadyInRepository_ReturnsError()

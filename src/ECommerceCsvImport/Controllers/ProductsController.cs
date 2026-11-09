@@ -80,6 +80,9 @@ public class ProductsController : Controller
         if (trimmed.StartsWith("/"))
             trimmed = trimmed.TrimStart('/');
 
+        if (trimmed.StartsWith("csv/", StringComparison.OrdinalIgnoreCase))
+            trimmed = trimmed["csv/".Length..];
+
         return Path.Combine(_environment.WebRootPath, "csv", trimmed);
     }
 }

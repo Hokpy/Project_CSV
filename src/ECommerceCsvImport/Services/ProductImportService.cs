@@ -59,11 +59,11 @@ public class ProductImportService : IProductImportService
     public ImportResult ImportFromLines(IEnumerable<string> lines)
     {
         var result = new ImportResult();
-        var linesList = lines.ToList();
+        var linesList = lines?.ToList() ?? new List<string>();
 
-        var nonEmptyLines = linesList.Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+        var headerIndex = linesList.FindIndex(l => !string.IsNullOrWhiteSpace(l));
         
-        if (nonEmptyLines.Count == 0)
+        if (headerIndex < 0)
         {
             result.Errors.Add(new ImportError
             {
@@ -73,7 +73,7 @@ public class ProductImportService : IProductImportService
             return result;
         }
 
-        var headerLine = nonEmptyLines[0];
+        var headerLine = linesList[headerIndex];
         var headerFields = CsvLineParser.Parse(headerLine);
         
         var requiredColumns = new[] 
@@ -98,10 +98,9 @@ public class ProductImportService : IProductImportService
         {
             if (!columnMap.ContainsKey(required))
             {
-                var headerRowNumber = linesList.IndexOf(headerLine) + 1;
                 result.Errors.Add(new ImportError
                 {
-                    RowNumber = headerRowNumber,
+                    RowNumber = headerIndex + 1,
                     Message = "Неверные заголовки CSV"
                 });
                 return result;
@@ -111,10 +110,13 @@ public class ProductImportService : IProductImportService
         var expectedFieldCount = headerFields.Count;
         var importedSkus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        for (int i = 1; i < nonEmptyLines.Count; i++)
+        for (int i = headerIndex + 1; i < linesList.Count; i++)
         {
-            var line = nonEmptyLines[i];
-            var physicalRowNumber = linesList.IndexOf(line) + 1;
+            var line = linesList[i];
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            var physicalRowNumber = i + 1;
             
             result.TotalRows++;
             
