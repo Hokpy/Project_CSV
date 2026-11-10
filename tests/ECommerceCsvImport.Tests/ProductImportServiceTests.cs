@@ -485,4 +485,114 @@ public class ProductImportServiceTests
         Assert.Equal("Бюджетный ноутбук для работы и учебы", product.Description);
         Assert.Equal("Компьютеры", product.CategoryName);
     }
+
+    [Fact]
+    public void ImportFromLines_WarrantyBoundaries_AreAccepted()
+    {
+        var (repository, service) = CreateService();
+        var lines = new[]
+        {
+            Header,
+            "2001,Minimum warranty,,100,RUB,Test,1,,true,Brand,0,Min",
+            "2002,Maximum warranty,,100,RUB,Test,1,,true,Brand,60,Max"
+        };
+
+        var result = service.ImportFromLines(lines);
+
+        Assert.Equal(2, result.ImportedCount);
+        Assert.Empty(result.Errors);
+        Assert.Equal(2, repository.Count);
+    }
+
+    [Fact]
+    public void ImportFromLines_WhitespaceOnlyRequiredValues_AreRejected()
+    {
+        var (_, service) = CreateService();
+        var lines = new[]
+        {
+            Header,
+            "   ,   ,Description,100,RUB,Test,1,,true,Brand,12,Model"
+        };
+
+        var result = service.ImportFromLines(lines);
+
+        Assert.Equal(0, result.ImportedCount);
+        Assert.Contains(result.Errors, error => error.Message.Contains("sku"));
+        Assert.Contains(result.Errors, error => error.Message.Contains("name"));
+    }
+
+    [Fact]
+    public void ImportFromLines_LeadingBlankLines_PreservePhysicalRowNumber()
+    {
+        var (_, service) = CreateService();
+        var lines = new[]
+        {
+            "",
+            Header,
+            "3001,Product,,100,RUB,Test,1,,true,Brand,12,Model"
+        };
+
+        var result = service.ImportFromLines(lines);
+
+        Assert.Equal(1, result.ImportedCount);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public void ImportFromLines_ZeroPrice_IsRejected()
+    {
+        var (_, service) = CreateService();
+        var result = service.ImportFromLines(new[]
+        {
+            Header,
+            "4001,Zero price,,0,RUB,Test,1,,true,Brand,12,Model"
+        });
+
+        Assert.Equal(0, result.ImportedCount);
+        Assert.Contains(result.Errors, error => error.Message.Contains("price"));
+    }
+
+    [Fact]
+    public void ImportFromLines_NonNumericStock_IsRejected()
+    {
+        var (_, service) = CreateService();
+        var result = service.ImportFromLines(new[]
+        {
+            Header,
+            "4002,Bad stock,,100,RUB,Test,abc,,true,Brand,12,Model"
+        });
+
+        Assert.Equal(0, result.ImportedCount);
+        Assert.Contains(result.Errors, error => error.Message.Contains("Остаток"));
+    }
+
+    [Fact]
+    public void ImportFromLines_NonNumericWarranty_IsRejected()
+    {
+        var (_, service) = CreateService();
+        var result = service.ImportFromLines(new[]
+        {
+            Header,
+            "4003,Bad warranty,,100,RUB,Test,1,,true,Brand,abc,Model"
+        });
+
+        Assert.Equal(0, result.ImportedCount);
+        Assert.Contains(result.Errors, error => error.Message.Contains("Гарантия"));
+    }
+
+    [Fact]
+    public void ImportFromLines_BooleanValues_AreCaseInsensitive()
+    {
+        var (repository, service) = CreateService();
+        var result = service.ImportFromLines(new[]
+        {
+            Header,
+            "4004,Upper true,,100,RUB,Test,1,,TRUE,Brand,12,Model",
+            "4005,Mixed-case false,,100,RUB,Test,1,,FaLsE,Brand,12,Model"
+        });
+
+        Assert.Equal(2, result.ImportedCount);
+        Assert.True(repository.GetBySku("4004")!.IsActive);
+        Assert.False(repository.GetBySku("4005")!.IsActive);
+    }
 }

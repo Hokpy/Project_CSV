@@ -108,8 +108,6 @@ public class ProductImportService : IProductImportService
         }
 
         var expectedFieldCount = headerFields.Count;
-        var importedSkus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
         for (int i = headerIndex + 1; i < linesList.Count; i++)
         {
             var line = linesList[i];
@@ -223,17 +221,6 @@ public class ProductImportService : IProductImportService
                 continue;
             }
 
-            bool isDuplicate = _repository.GetBySku(sku) != null || importedSkus.Contains(sku);
-            if (isDuplicate)
-            {
-                result.Errors.Add(new ImportError
-                {
-                    RowNumber = physicalRowNumber,
-                    Message = "Артикул товара уже существует"
-                });
-                continue;
-            }
-
             var product = new Product
             {
                 Sku = sku,
@@ -250,8 +237,16 @@ public class ProductImportService : IProductImportService
                 ModelNumber = GetValue("model_number").Trim()
             };
 
-            _repository.Add(product);
-            importedSkus.Add(sku);
+            if (!_repository.TryAdd(product))
+            {
+                result.Errors.Add(new ImportError
+                {
+                    RowNumber = physicalRowNumber,
+                    Message = "Артикул товара уже существует"
+                });
+                continue;
+            }
+
             result.ImportedCount++;
         }
 

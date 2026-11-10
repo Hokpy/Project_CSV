@@ -29,6 +29,24 @@ public class InMemoryProductRepository : IProductRepository
         }
     }
 
+    public bool TryAdd(Product product)
+    {
+        if (product == null)
+            throw new ArgumentNullException(nameof(product));
+
+        lock (_lock)
+        {
+            if (_products.Any(existing =>
+                    string.Equals(existing.Sku, product.Sku.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            _products.Add(product);
+            return true;
+        }
+    }
+
     public IReadOnlyList<Product> GetAll()
     {
         lock (_lock)

@@ -5,6 +5,7 @@ using ECommerceCsvImport.Models;
 public interface IProductRepository
 {
     void Add(Product product);
+    bool TryAdd(Product product);
     IReadOnlyList<Product> GetAll();
     Product? GetBySku(string sku);
     int Count { get; }

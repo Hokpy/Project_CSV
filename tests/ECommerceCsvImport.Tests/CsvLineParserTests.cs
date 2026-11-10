@@ -57,4 +57,19 @@ public class CsvLineParserTests
         Assert.Equal("Название \"Special\"", fields[1]);
         Assert.Equal("Описание", fields[2]);
     }
+
+    [Fact]
+    public void Parse_TrailingEmptyField_PreservesIt()
+    {
+        var fields = CsvLineParser.Parse("sku,name,");
+
+        Assert.Equal(3, fields.Count);
+        Assert.Equal(string.Empty, fields[2]);
+    }
+
+    [Fact]
+    public void Parse_EmptyLine_ReturnsNoFields()
+    {
+        Assert.Empty(CsvLineParser.Parse(string.Empty));
+    }
 }

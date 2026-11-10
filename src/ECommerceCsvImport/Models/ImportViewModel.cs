@@ -2,6 +2,6 @@ namespace ECommerceCsvImport.Models;
 
 public class ImportViewModel
 {
-    public string FilePath { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
     public ImportResult? Result { get; set; }
 }

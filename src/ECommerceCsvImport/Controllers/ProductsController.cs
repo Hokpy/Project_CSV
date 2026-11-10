@@ -1,23 +1,24 @@
+using System.Text;
 using ECommerceCsvImport.Models;
 using ECommerceCsvImport.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceCsvImport.Controllers;
 
 public class ProductsController : Controller
 {
+    private const long MaxCsvFileSize = 5 * 1024 * 1024;
+
     private readonly IProductRepository _repository;
     private readonly IProductImportService _importService;
-    private readonly IWebHostEnvironment _environment;
 
     public ProductsController(
         IProductRepository repository,
-        IProductImportService importService,
-        IWebHostEnvironment environment)
+        IProductImportService importService)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _importService = importService ?? throw new ArgumentNullException(nameof(importService));
-        _environment = environment ?? throw new ArgumentNullException(nameof(environment));
     }
 
     [HttpGet]
@@ -38,64 +39,70 @@ public class ProductsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public ActionResult Import(string filePath)
+    public async Task<ActionResult> Import(IFormFile? csvFile)
     {
-        var resolvedPath = ResolveFilePath(filePath);
-        if (string.IsNullOrWhiteSpace(resolvedPath))
+        if (csvFile is null || csvFile.Length == 0)
         {
-            return View("Import", new ImportViewModel
-            {
-                FilePath = filePath ?? string.Empty,
-                Result = new ImportResult
-                {
-                    Errors =
-                    {
-                        new ImportError
-                        {
-                            RowNumber = 0,
-                            Message = "Укажите путь к CSV-файлу"
-                        }
-                    }
-                }
-            });
+            return ImportViewWithError("Выберите CSV-файл");
         }
 
-        var result = _importService.ImportFromCsv(resolvedPath);
+        var fileName = Path.GetFileName(csvFile.FileName);
+        if (!Path.GetExtension(fileName).Equals(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            return ImportViewWithError("Разрешены только файлы с расширением .csv", fileName);
+        }
+
+        if (csvFile.Length > MaxCsvFileSize)
+        {
+            return ImportViewWithError("Размер CSV-файла не должен превышать 5 МБ", fileName);
+        }
+
+        ImportResult result;
+        try
+        {
+            using var stream = csvFile.OpenReadStream();
+            using var reader = new StreamReader(
+                stream,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true);
+
+            var lines = new List<string>();
+            while (await reader.ReadLineAsync() is { } line)
+            {
+                lines.Add(line);
+            }
+
+            result = _importService.ImportFromLines(lines);
+        }
+        catch (IOException)
+        {
+            result = CreateFileError("Не удалось прочитать CSV-файл");
+        }
+
         return View("Import", new ImportViewModel
         {
-            FilePath = filePath ?? string.Empty,
+            FileName = fileName,
             Result = result
         });
     }
 
-    private string? ResolveFilePath(string input)
+    private ViewResult ImportViewWithError(string message, string fileName = "")
     {
-        if (string.IsNullOrWhiteSpace(input))
-            return null;
-
-        var trimmed = input.Trim();
-
-        // Handle web-style paths like /csv/file.csv or csv/file.csv
-        // that refer to files inside wwwroot/csv/
-        var normalized = trimmed.Replace('\\', '/');
-
-        if (normalized.StartsWith("/csv/", StringComparison.OrdinalIgnoreCase))
+        return View("Import", new ImportViewModel
         {
-            var fileName = normalized["/csv/".Length..];
-            return Path.Combine(_environment.WebRootPath, "csv", fileName);
-        }
+            FileName = fileName,
+            Result = CreateFileError(message)
+        });
+    }
 
-        if (normalized.StartsWith("csv/", StringComparison.OrdinalIgnoreCase))
+    private static ImportResult CreateFileError(string message)
+    {
+        return new ImportResult
         {
-            var fileName = normalized["csv/".Length..];
-            return Path.Combine(_environment.WebRootPath, "csv", fileName);
-        }
-
-        // Absolute OS path (e.g. C:\files\data.csv or /home/user/data.csv)
-        if (Path.IsPathRooted(trimmed))
-            return trimmed;
-
-        // Relative path — resolve against wwwroot/csv/
-        return Path.Combine(_environment.WebRootPath, "csv", trimmed);
+            Errors =
+            {
+                new ImportError { RowNumber = 0, Message = message }
+            }
+        };
     }
 }

@@ -5,16 +5,17 @@
 
 <h1>Импорт товаров из CSV</h1>
 
-<form method="post" asp-controller="Products" asp-action="Import">
+<form method="post" enctype="multipart/form-data" asp-controller="Products" asp-action="Import">
     @Html.AntiForgeryToken()
     <div class="form-group">
-        <label for="filePath">Путь к CSV-файлу</label>
-        <input type="text"
-               id="filePath"
-               name="filePath"
+        <label for="csvFile">CSV-файл</label>
+        <input type="file"
+               id="csvFile"
+               name="csvFile"
+               accept=".csv,text/csv"
                class="form-control"
-               value="@Model.FilePath"
-               placeholder="/csv/sample_products.csv" />
+               required />
+        <div class="form-text">Максимальный размер файла — 5 МБ.</div>
     </div>
     <button type="submit" class="btn btn-primary mt-3">Импортировать товары</button>
 </form>

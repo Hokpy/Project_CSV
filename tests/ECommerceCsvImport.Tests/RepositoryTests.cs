@@ -77,4 +77,36 @@ public class RepositoryTests
         Assert.Empty(repository.GetAll());
         Assert.Null(repository.GetBySku("1001"));
     }
+
+    [Fact]
+    public void TryAdd_RejectsDuplicateSkuAtomically()
+    {
+        var repository = new InMemoryProductRepository();
+
+        var firstAdded = repository.TryAdd(new Product { Sku = "1001", Name = "First" });
+        var secondAdded = repository.TryAdd(new Product { Sku = " 1001 ", Name = "Second" });
+
+        Assert.True(firstAdded);
+        Assert.False(secondAdded);
+        Assert.Equal(1, repository.Count);
+        Assert.Equal("First", repository.GetBySku("1001")!.Name);
+    }
+
+    [Fact]
+    public async Task TryAdd_ConcurrentCalls_StoreOnlyOneProduct()
+    {
+        var repository = new InMemoryProductRepository();
+        var tasks = Enumerable.Range(0, 20)
+            .Select(index => Task.Run(() => repository.TryAdd(new Product
+            {
+                Sku = "CONCURRENT",
+                Name = $"Product {index}"
+            })))
+            .ToArray();
+
+        var results = await Task.WhenAll(tasks);
+
+        Assert.Single(results, added => added);
+        Assert.Equal(1, repository.Count);
+    }
 }

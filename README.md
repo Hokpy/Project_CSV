@@ -2,61 +2,6 @@
 
 Учебный проект производственной практики **ПП.02.01** — ASP.NET Core MVC-приложение для импорта товаров интернет-магазина из CSV-файлов.
 
-## Вариант 1 — Электроника
-
-Дополнительные поля для варианта «Электроника»:
-
-| Поле | Описание | Ограничения |
-|------|----------|-------------|
-| `brand` | Бренд производителя | Обязательно |
-| `warranty_months` | Срок гарантии (мес.) | 0–60 |
-| `model_number` | Номер модели | Может быть пустым |
-
-## Структура проекта
-
-```
-work_ber/
-├── ECommerceCsvImport.sln             # Solution для Visual Studio
-├── ECommerceCsvImport.slnx            # Solution в формате .slnx
-├── src/
-│   └── ECommerceCsvImport/          # ASP.NET Core MVC приложение
-│       ├── Controllers/
-│       │   └── ProductsController.cs
-│       ├── Models/
-│       │   ├── Product.cs
-│       │   ├── ImportResult.cs
-│       │   ├── ImportError.cs
-│       │   ├── ImportViewModel.cs
-│       │   └── ProductsIndexViewModel.cs
-│       ├── Services/
-│       │   ├── IProductRepository.cs
-│       │   ├── InMemoryProductRepository.cs
-│       │   ├── CsvLineParser.cs
-│       │   ├── IProductImportService.cs
-│       │   └── ProductImportService.cs
-│       ├── Views/
-│       │   └── Products/
-│       │       ├── Index.cshtml
-│       │       └── Import.cshtml
-│       └── wwwroot/csv/
-│           └── sample_products.csv  # Пример CSV с 11 товарами
-├── tests/
-│   └── ECommerceCsvImport.Tests/    # xUnit тесты
-│       ├── testdata/                # Тестовые CSV-файлы
-│       ├── RepositoryTests.cs
-│       ├── CsvLineParserTests.cs
-│       └── ProductImportServiceTests.cs
-├── docs/
-│   └── practice_report_draft.md    # Черновик отчёта по практике
-├── final_documents/                 # Подготовленные материалы практики
-│   ├── Отчет_по_практике_ПП0201_черновик.docx
-│   ├── Дневник_практики_ПП0201_черновик.docx
-│   ├── Аттестационный_лист_ПП0201_черновик.docx
-│   ├── Презентация_ПП0201.pptx
-│   └── Доклад_и_вопросы_к_защите.md
-└── README.md
-```
-
 ## Формат CSV
 
 Обязательный заголовок:
@@ -114,28 +59,29 @@ dotnet test ECommerceCsvImport.sln
 ## Использование
 
 1. Откройте `http://localhost:5245/Products/Import` в браузере
-2. Укажите путь к CSV-файлу:
-   - Веб-путь: `/csv/sample_products.csv` (ищется в `wwwroot/csv/`)
-   - Только имя файла: `sample_products.csv` (также ищется в `wwwroot/csv/`)
-   - Полный путь ОС: `C:\data\products.csv` или `/home/user/products.csv`
-3. Нажмите «Импортировать»
+2. Выберите CSV-файл с компьютера через поле загрузки
+3. Нажмите «Импортировать товары»
 4. Просмотрите результаты на странице результатов
 5. Перейдите в «Товары» для просмотра импортированных записей
 
 ### Быстрый тест
 
-В папке `wwwroot/csv/` уже есть `sample_products.csv` с 11 корректными товарами-электроникой.
-Введите путь `/csv/sample_products.csv` в форму импорта.
+В папке `wwwroot/csv/` уже есть `sample_products.csv` с 11 корректными товарами-электроникой. Для быстрого теста выберите этот файл через кнопку выбора файла.
+
+Файлы ограничены расширением `.csv` и размером 5 МБ. Серверные пути не принимаются: файл передаётся приложению через безопасную multipart-загрузку.
 
 ## Тесты
 
-Проект покрыт **32 unit-тестами**:
+Проект покрыт **48 автоматическими тестами**:
 
 | Файл | Тестов | Что проверяется |
 |------|--------|-----------------|
-| `RepositoryTests.cs` | 4 | Добавление, хранение, поиск по SKU, дубликаты |
-| `CsvLineParserTests.cs` | 4 | Парсинг строк, кавычки, пустые поля |
-| `ProductImportServiceTests.cs` | 24 | Все сценарии валидации по спецификации + регрессия |
+| `RepositoryTests.cs` | 6 | Добавление, хранение, поиск по SKU и атомарная проверка дубликатов |
+| `CsvLineParserTests.cs` | 6 | Парсинг строк, кавычки, пустые и крайние поля |
+| `ProductImportServiceTests.cs` | 31 | Валидация, нормализация, границы и ошибки импорта |
+| `ProductsControllerTests.cs` | 5 | Загрузка CSV, расширение, лимит размера и пустой файл |
+
+Для сопоставления с PDF-планом: в нём указаны 31 базовый автоматический тест (4 теста репозитория, 4 теста парсера и 23 теста сервиса) и 5 ручных UI-сценариев. В проекте количество тестов было увеличено до 48 автоматических тестов, чтобы дополнительно проверить граничные случаи, ошибки загрузки, атомарность и конкурентность и тем самым снизить риск необнаруженных ошибок.
 
 ```bash
 dotnet test ECommerceCsvImport.sln --verbosity normal
