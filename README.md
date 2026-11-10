@@ -16,6 +16,8 @@
 
 ```
 work_ber/
+├── ECommerceCsvImport.sln             # Solution для Visual Studio
+├── ECommerceCsvImport.slnx            # Solution в формате .slnx
 ├── src/
 │   └── ECommerceCsvImport/          # ASP.NET Core MVC приложение
 │       ├── Controllers/
@@ -46,6 +48,12 @@ work_ber/
 │       └── ProductImportServiceTests.cs
 ├── docs/
 │   └── practice_report_draft.md    # Черновик отчёта по практике
+├── final_documents/                 # Подготовленные материалы практики
+│   ├── Отчет_по_практике_ПП0201_черновик.docx
+│   ├── Дневник_практики_ПП0201_черновик.docx
+│   ├── Аттестационный_лист_ПП0201_черновик.docx
+│   ├── Презентация_ПП0201.pptx
+│   └── Доклад_и_вопросы_к_защите.md
 └── README.md
 ```
 
@@ -68,9 +76,9 @@ SKU001,Samsung Galaxy S24,Флагманский смартфон,89990,RUB,См
 - `sku` — обязателен, уникален в рамках импорта
 - `name` — обязателен
 - `price` — число > 0
-- `currency` — `RUB`, `USD` или `EUR`
+- `currency` — любое непустое значение; по умолчанию `RUB`
 - `stock` — целое число ≥ 0
-- `is_active` — `true` или `false`
+- `is_active` — `true`, `false`, `1` или `0`
 - `brand` — обязателен
 - `warranty_months` — целое число от 0 до 60
 - Строки с любой ошибкой пропускаются целиком
@@ -80,44 +88,55 @@ SKU001,Samsung Galaxy S24,Флагманский смартфон,89990,RUB,См
 ### Требования
 
 - .NET 10 SDK
+- Visual Studio с поддержкой .NET 10 для запуска на Windows
 
-### Команды
+### Visual Studio (Windows)
+
+1. Откройте `ECommerceCsvImport.sln` в Visual Studio 2022
+2. Нажмите F5 или выберите профиль запуска (IIS Express / https / http)
+3. Браузер откроется на странице `/Products`
+
+### Командная строка
 
 ```bash
 # Сборка
-dotnet build
+dotnet build ECommerceCsvImport.sln
 
 # Запуск веб-приложения
 dotnet run --project src/ECommerceCsvImport
 
 # Запуск тестов
-dotnet test
+dotnet test ECommerceCsvImport.sln
 ```
 
-По умолчанию приложение запустится на `https://localhost:5001` (или `http://localhost:5000`).
+По умолчанию приложение запустится на `https://localhost:7003` (или `http://localhost:5245`).
 
 ## Использование
 
-1. Откройте `http://localhost:5000/Products/Import` в браузере
-2. Укажите путь к CSV-файлу (абсолютный или относительный к папке `wwwroot/csv/`)
+1. Откройте `http://localhost:5245/Products/Import` в браузере
+2. Укажите путь к CSV-файлу:
+   - Веб-путь: `/csv/sample_products.csv` (ищется в `wwwroot/csv/`)
+   - Только имя файла: `sample_products.csv` (также ищется в `wwwroot/csv/`)
+   - Полный путь ОС: `C:\data\products.csv` или `/home/user/products.csv`
 3. Нажмите «Импортировать»
 4. Просмотрите результаты на странице результатов
 5. Перейдите в «Товары» для просмотра импортированных записей
 
 ### Быстрый тест
 
-В папке `wwwroot/csv/` уже есть `sample_products.csv` с 11 корректными товарами-электроникой. Введите путь `sample_products.csv` в форму импорта.
+В папке `wwwroot/csv/` уже есть `sample_products.csv` с 11 корректными товарами-электроникой.
+Введите путь `/csv/sample_products.csv` в форму импорта.
 
 ## Тесты
 
-Проект покрыт 31 unit-тестом:
+Проект покрыт **32 unit-тестами**:
 
 | Файл | Тестов | Что проверяется |
 |------|--------|-----------------|
 | `RepositoryTests.cs` | 4 | Добавление, хранение, поиск по SKU, дубликаты |
 | `CsvLineParserTests.cs` | 4 | Парсинг строк, кавычки, пустые поля |
-| `ProductImportServiceTests.cs` | 23 | Все сценарии валидации по спецификации |
+| `ProductImportServiceTests.cs` | 24 | Все сценарии валидации по спецификации + регрессия |
 
 ```bash
-dotnet test --verbosity normal
+dotnet test ECommerceCsvImport.sln --verbosity normal
 ```
