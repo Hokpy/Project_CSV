@@ -222,6 +222,23 @@ public class ProductImportServiceTests
         Assert.Contains(result.Errors, e => e.Message.Contains("Поле price должно быть числом больше 0"));
     }
 
+    [Theory]
+    [InlineData("1e2")]
+    [InlineData("¤100")]
+    [InlineData("(100)")]
+    public void ImportFromLines_NonStandardPriceFormat_ReturnsError(string price)
+    {
+        var (_, service) = CreateService();
+        var result = service.ImportFromLines(new[]
+        {
+            Header,
+            $"1003,Product,,{price},RUB,Category,1,,true,Brand,12,Model"
+        });
+
+        Assert.Equal(0, result.ImportedCount);
+        Assert.Contains(result.Errors, error => error.Message.Contains("Поле price должно быть числом больше 0"));
+    }
+
     // === Тест 12: Отрицательный остаток ===
     [Fact]
     public void ImportFromLines_NegativeStock_ReturnsError()

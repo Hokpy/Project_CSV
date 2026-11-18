@@ -44,14 +44,14 @@ public class ProductImportService : IProductImportService
         {
             return new ImportResult
             {
-                Errors = { new ImportError { RowNumber = 0, Message = "Файл не найден" } }
+                Errors = { new ImportError { RowNumber = 0, Message = "Не удалось прочитать файл" } }
             };
         }
         catch (UnauthorizedAccessException)
         {
             return new ImportResult
             {
-                Errors = { new ImportError { RowNumber = 0, Message = "Файл не найден" } }
+                Errors = { new ImportError { RowNumber = 0, Message = "Нет доступа к файлу" } }
             };
         }
     }
@@ -264,7 +264,7 @@ public class ProductImportService : IProductImportService
 
     private static bool TryParseDecimal(string value, out decimal result)
     {
-        return decimal.TryParse(value?.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+        return decimal.TryParse(value?.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out result);
     }
 
     private static bool TryParseInt(string value, out int result)
